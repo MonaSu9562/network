@@ -12,8 +12,10 @@ public class WebServerMain {
      * @param args
      */
     public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
+        // The directory from which your server will serve documents to clients.
+        String directory = args[0];
+        // The port of the server you listened.
+        int port = Integer.parseInt(args[1]);
     }
 
 }
