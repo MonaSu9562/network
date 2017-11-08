@@ -15,6 +15,8 @@ public class Server {
                 System.out.println("Server got new connection request from " + conn.getInetAddress());
                 ConnectionHandler ch = new ConnectionHandler(directory, conn);
                 ch.start();
+                ss.close();
+                conn.close();
             }
         } catch (IOException ioe) {
             System.out.println("Ooops " + ioe.getMessage());

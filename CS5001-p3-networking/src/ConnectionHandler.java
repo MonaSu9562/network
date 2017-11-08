@@ -1,11 +1,13 @@
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.URLDecoder;
 
 /**
  * 
@@ -59,11 +61,9 @@ public class ConnectionHandler extends Thread {
         try {
             // read the request header
             String line = br.readLine();
+            // show the request
+            System.out.println(line);
             request = line.split(" ");
-            for (int i = 0; i < request.length; i++) {
-                System.out.println(request[i]);
-            }
-
         } catch (IOException e) {
             e.getStackTrace();
         }
@@ -74,58 +74,76 @@ public class ConnectionHandler extends Thread {
         File f = new File(directory + request[1]);
         String fname = f.getName();
 
-        String response = null;
+        String header = null;
         String protocol = request[2];
         String code = null;
         String length = String.valueOf(f.length());
         String type = null;
-        String content = null;
 
         String ftype = fname.substring(fname.lastIndexOf(".") + 1);
 
-        System.out.println(f.exists());
-        System.out.println(f.getPath());
+        // System.out.println(f.exists());
+        // System.out.println(f.getPath());
 
         if (!f.exists()) {
             code = " 404 Not Found";
+            header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
+                    + "\r\nContent-Type: " + type + "\r\n";
+            // return the response header
+            pw.println(header);
+            System.out.println("header: " + header);
         } else {
             type = getType(ftype);
             switch (request[0].toUpperCase()) {
             case "GET":
                 code = " 200 OK";
+                header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
+                        + "\r\nContent-Type: " + type + "\r\n";
+                // return the response header
+                pw.println(header);
+                System.out.println("header: " + header);
+                responseContent(f);
                 break;
             case "HEAD":
                 code = " 200 OK";
+                header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
+                        + "\r\nContent-Type: " + type + "\r\n";
+                // return the response header
+                pw.println(header);
+                System.out.println("header: " + header);
                 break;
             default:
                 code = " 501 Not Implemented";
+                header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
+                        + "\r\nContent-Type: " + type + "\r\n";
+                // return the response header
+                pw.println(header);
+                System.out.println("header: " + header);
                 break;
             }
         }
+    }
+    
+    private String[] responseContent (File f) {
+        String[] content = null;
 
-        // if (!f.exists()) {
-        // code = " 404 Not Found";
-        // }
-        // if (Configuration.requireList.contains(request[0].toUpperCase())) {
-        // switch (request[0].toUpperCase()) {
-        // case "GET":
-        // break;
-        // case "HEAD":
-        // break;
-        // default:
-        // }
-        // code = " 200 OK";
-        // } else {
-        // code = " 501 Not Implemented";
-        // }
-
-        response = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
-                + "\r\nContent-Type: " + type + "\r\n\r\n" + content;
-        System.out.println(response);
-
-        pw.println(response);
-        while(){};
-
+        FileReader fr;
+        BufferedReader bufferedReader;
+        
+        try {
+            fr = new FileReader(f);
+            bufferedReader = new BufferedReader(fr);
+            // return the content of the argued file
+            String str = null;
+            while((str = bufferedReader.readLine())!=null) {
+                str = URLDecoder.decode(str, "UTF-8");
+                pw.println(str);
+                System.out.println(str);
+            }
+        } catch (IOException e) {
+            e.getStackTrace();
+        }
+        return content;
     }
 
     private String getType(String ftype) {
@@ -154,11 +172,6 @@ public class ConnectionHandler extends Thread {
             break;
         }
         return type;
-    }
-
-    private String getContent(String type, byte[] bytes) {
-
-        return null;
     }
 
     private void cleanup() {
