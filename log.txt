@@ -1,0 +1,17 @@
+Thu Nov 09 02:51:19 GMT 2017
+
+
+Request type: GET
+
+
+Response code:
+
+HTTP/1.1 200 OK
+Server: MySimpleServer written in Java 6
+Content-Length: 1279
+Content-Type: text/html
+
+
+[B@677dadda
+
+

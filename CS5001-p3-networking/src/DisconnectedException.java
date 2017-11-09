@@ -1,8 +1,6 @@
 /**
+ * This is the disconnectedException.
  * 
- */
-
-/**
  * @author 170026060
  *
  */
