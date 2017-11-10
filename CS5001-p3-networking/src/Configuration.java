@@ -5,4 +5,8 @@
  *
  */
 public abstract class Configuration {
+    /**
+     * This is the max number of threads in the pool.
+     */
+    public static final int MAX_NUM_OF_THREADS = 5;
 }

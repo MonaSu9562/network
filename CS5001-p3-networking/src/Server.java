@@ -1,6 +1,8 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * This class is the server.
@@ -25,17 +27,22 @@ public class Server {
      * @exception IOException
      */
     public Server(String directory, int port) {
+        // create a thread pool to limit the number of threads.
+        Executor ec = Executors.newFixedThreadPool(Configuration.MAX_NUM_OF_THREADS);
         try {
             ss = new ServerSocket(port);
             System.out.println("Server started ... listening on port " + port + " ...");
+            // listen to the socket persistently.
             while (true) {
                 Socket conn = ss.accept();
                 System.out.println("Server got new connection request from " + conn.getInetAddress());
+                // new a connection handler.
                 ConnectionHandler ch = new ConnectionHandler(directory, conn);
-                ch.start();
+                // start this thread.
+                ec.execute(ch);
             }
         } catch (IOException ioe) {
-            System.out.println("Ooops " + ioe.getMessage());
+            System.out.println("Server: " + ioe.getMessage());
         }
     }
 }

@@ -26,11 +26,9 @@ public class ConnectionHandler extends Thread {
     // use buffered reader to read client data
     private BufferedReader br;
     // use this to response to client
-    // private PrintWriter pw;
+    private BufferedOutputStream bos;
     // path
     private String directory;
-    //
-    private BufferedOutputStream bos;
 
     /**
      * The constructor of this class. This is to initialise.
@@ -51,7 +49,6 @@ public class ConnectionHandler extends Thread {
             is = conn.getInputStream();
             os = conn.getOutputStream();
             br = new BufferedReader(new InputStreamReader(is));
-            // pw = new PrintWriter(os, true);
             bos = new BufferedOutputStream(os);
         } catch (IOException ioe) {
             System.out.println("ConnectionHandler: " + ioe.getMessage());
@@ -67,9 +64,12 @@ public class ConnectionHandler extends Thread {
     public void run() {
         System.out.println("new ConnectionHandler thread started .... ");
         try {
+            // execute the response procedure.
             responseToClient(getRequest(), directory);
+            cleanup();
         } catch (Exception e) {
             System.out.println("ConnectionHandler:run " + e.getMessage());
+            // clean up and exit if have exception.
             cleanup();
         }
     }
@@ -84,8 +84,9 @@ public class ConnectionHandler extends Thread {
         try {
             // read the request header
             String line = br.readLine();
-            // show the request
+            // show the request header
             System.out.println(line);
+            // split the request
             request = line.split(" ");
         } catch (IOException e) {
             e.getStackTrace();
@@ -107,83 +108,115 @@ public class ConnectionHandler extends Thread {
     private void responseToClient(String[] request, String directory) throws IOException {
         File f = new File(directory + request[1]);
         String fname = f.getName();
+        System.out.println(fname);
+        String ftype = fname.substring(fname.lastIndexOf(".") + 1);
 
         String response = null;
         String header = null;
         String protocol = request[2];
         String code = null;
         String length = String.valueOf(f.length());
-        String type = null;
+        String type = getType(ftype);
 
-        String ftype = fname.substring(fname.lastIndexOf(".") + 1);
+        byte[] b = null; // this is to save the bytes form of the header
 
-        if (!f.exists()) {
-            code = " 404 Not Found";
-            header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
-                    + "\r\nContent-Type: " + type + "\r\n";
-            response = header;
-            // System.out.println(response);
-            // pw.println(response);
-        } else {
-            type = getType(ftype);
-            switch (request[0].toUpperCase()) {
-            case "GET":
+        switch (request[0].toUpperCase()) {
+        case "GET":
+            if (!f.exists()) {
+                code = " 404 Not Found";
+                header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
+                        + "\r\nContent-Type: " + type + "\r\n";
+                // change the form of header
+                b = header.getBytes("UTF8");
+                // send response to the client
+                bos.write(b);
+
+                response = header;
+            } else {
                 code = " 200 OK";
                 header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
                         + "\r\nContent-Type: " + type + "\r\n";
-                response = header + "\r\n" + getResponseContent(f);
-                // System.out.println(header);
-                // pw.println(header);
-                // System.out.println(getResponseContent(f));
-                // pw.println(getResponseContent(f));
-
-                byte[] b = header.getBytes("UTF8");
-                System.out.println(b);
+                // change the form of header
+                b = header.getBytes("UTF8");
+                // send response to the client
                 bos.write(b);
                 bos.write(getResponseContent(f));
-                bos.flush();
-                conn.close();
-                bos.close();
-                break;
-            case "HEAD":
+
+                response = header + "\r\n" + new String(getResponseContent(f), "UTF8");
+            }
+            break;
+
+        case "HEAD":
+            if (!f.exists()) {
+                code = " 404 Not Found";
+                header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
+                        + "\r\nContent-Type: " + type + "\r\n";
+                // change the form of header
+                b = header.getBytes("UTF8");
+                // send response to the client
+                bos.write(b);
+
+                response = header;
+            } else {
                 code = " 200 OK";
                 header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
                         + "\r\nContent-Type: " + type + "\r\n";
+                // change the form of header
+                b = header.getBytes("UTF8");
+                // send response to the client
+                bos.write(b);
+
                 response = header;
-                // System.out.println(response);
-                // pw.println(response);
-                break;
-            default:
-                code = " 501 Not Implemented";
+            }
+
+            break;
+
+        case "DELETE":
+            if (!f.exists()) {
+                System.out.println(fname + " undeleted.");
+
+                code = " 204 No Content";
                 header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
                         + "\r\nContent-Type: " + type + "\r\n";
+                // change the form of header
+                b = header.getBytes("UTF8");
+                // send response to the client
+                bos.write(b);
+
                 response = header;
-                // System.out.println(response);
-                // pw.println(response);
-                break;
+            } else {
+                code = " 200 OK";
+                header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
+                        + "\r\nContent-Type: " + type + "\r\n";
+                // delete the file
+                f.delete();
+                System.out.println(fname + " deleted.");
+                // change the form of header
+                b = header.getBytes("UTF8");
+                // send response to the client
+                bos.write(b);
+                bos.write(getResponseContent(f));
+
+                response = header + "\r\n" + getResponseContent(f);
             }
-        }
-        // System.out.println(response);
-        // pw.println(response);
+            break;
 
-        // System.out.println(response);
-        // byte[] b = response.getBytes("UTF8");
-        // System.out.println(b);
-        // pw.println(b);
-
-        System.out.println(response);
-        try {
-            response.toString();
-            byte[] b = response.getBytes("UTF8");
-            System.out.println(b);
+        default:
+            code = " 501 Not Implemented";
+            header = protocol + code + "\r\nServer: MySimpleServer written in Java 6\r\nContent-Length: " + length
+                    + "\r\nContent-Type: " + type + "\r\n";
+            // change the form of header
+            b = header.getBytes("UTF8");
+            // send response to the client
             bos.write(b);
-            bos.flush();
-            conn.close();
-            bos.close();
-        } catch (Exception e) {
-            e.getStackTrace();
+
+            response = header;
+            break;
         }
 
+        // test if the response is correct
+        System.out.println(response);
+        // log the information into log.txt
         LogRequest log = new LogRequest(request[0], response);
     }
 
@@ -193,45 +226,24 @@ public class ConnectionHandler extends Thread {
      * @exception IOException
      */
     private byte[] getResponseContent(File f) {
-        // String content = new String();
-        // FileReader fr;
-        // BufferedReader bufferedReader;
-        //
-        // try {
-        // fr = new FileReader(f);
-        // bufferedReader = new BufferedReader(fr);
-        // // return the content of the argued file
-        // String str = null;
-        // while ((str = bufferedReader.readLine()) != null) {
-        // str += "\r\n";
-        // str = URLDecoder.decode(str, "UTF-8");
-        // content += str;
-        // }
-        // } catch (IOException e) {
-        // e.getStackTrace();
-        // }
-        // return content;
 
         byte[] content = null;
 
-        // String content = null;
         try {
             // Read file stream by bytes
             FileInputStream fis = new FileInputStream(f);
             byte[] bytes = new byte[fis.available()];
             fis.read(bytes);
             fis.close();
-            // content = new String(bytes, "UTF8");
             content = bytes;
         } catch (Exception e) {
             e.getMessage();
         }
-        // System.out.println(content);
         return content;
     }
 
     /**
-     * Get the output type of the selected file.
+     * Get the asked form of output type of the selected file.
      * 
      * @param ftype
      *            the type of the file.
@@ -274,14 +286,12 @@ public class ConnectionHandler extends Thread {
     private void cleanup() {
         System.out.println("ConnectionHandler: ... cleaning up and exiting ... ");
         try {
-            br.close();
-            is.close();
-            os.close();
-            // pw.flush();
-            // pw.close();
             bos.flush();
             conn.close();
             bos.close();
+            br.close();
+            is.close();
+            os.close();
         } catch (IOException ioe) {
             System.out.println("ConnectionHandler:cleanup " + ioe.getMessage());
         }

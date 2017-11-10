@@ -1,5 +1,9 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Calendar;
 
@@ -10,9 +14,9 @@ import java.util.Calendar;
  *
  */
 public class LogRequest {
-    private String data = null;
-    private String type = null;
-    private String response = null;
+    private String type = null; // the type of the request.
+    private String response = null; // the content of the response in the form
+                                    // of String.
 
     /**
      * This is the constructor.
@@ -29,13 +33,32 @@ public class LogRequest {
         logRequest();
     }
 
+    /**
+     * This is to log the information into log.txt.
+     * 
+     * @exception IOException
+     * 
+     */
     public void logRequest() {
         try {
-            PrintWriter pw = new PrintWriter(new FileWriter("../log.txt"));
-            pw.println(Calendar.getInstance().getTime() + "\r\n\r\n");
-            pw.println("Request type: " + type + "\r\n\r\n");
-            pw.println("Response code:\r\n\r\n" + response + "\r\n\r\n");
-            pw.close();
+            // set the content of this log operation.
+            String content = new String();
+            content = Calendar.getInstance().getTime() + "\r\n\r\n" + "Request type: " + type + "\r\n\r\n"
+                    + "Response code:\r\n\r\n" + response + "\r\n\r\n";
+
+            // check if the file exist. Add the new data into that file if it
+            // exist otherwise create a new file and add content.
+            File f = new File("../log.txt");
+            if (f.exists()) {
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f, true)));
+                bw.write(content);
+                bw.close();
+            } else {
+                PrintWriter pw = new PrintWriter(new FileWriter("../log.txt"));
+                pw.println(content);
+                pw.close();
+            }
+
         } catch (IOException e) {
             e.getStackTrace();
         }

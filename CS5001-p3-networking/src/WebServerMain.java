@@ -29,10 +29,8 @@ public class WebServerMain {
             String directory = args[0];
             // The port of the server you listened.
             int port = Integer.parseInt(args[1]);
-
             // new WebServerMain(directory, port);
             Server s = new Server(directory, port);
-
         } catch (Exception e) {
             System.out.println("Usage: java WebServerMain <document_root> <port>");
         }
