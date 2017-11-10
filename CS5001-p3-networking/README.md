@@ -1,10 +1,9 @@
 Enhancement:
 a)  Returning of binary images (GIF, JPEG and PNG).
-b)  Multithreading	– support multiple concurrent client connection requests up	to a specified limit.
+b)  Multithreading – support multiple concurrent client connection requests up	to a specified limit.
     This limitation could be changed through the variable MAX_NUM_OF_THREADS in Configuration.java.
-c)  Supporting DELETE method.
-    Instruction: 
-d)  Logging	– each time requests are made, log them	to a file, indicating date/time request type,
+c)  Supporting DELETE method - Return "200 OK" if delete correctly and return "204 No content" if the file is not exist. 
+d)  Logging – each time requests are made, log them	to a file, indicating date/time request type,
     and response code.
     The name and the directory of that log document could be changed in Configuration.java. 
     The default name is log.txt and the default directory is "../".

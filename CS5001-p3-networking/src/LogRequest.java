@@ -54,7 +54,8 @@ public class LogRequest {
                 bw.write(content);
                 bw.close();
             } else {
-                PrintWriter pw = new PrintWriter(new FileWriter("../log.txt"));
+                PrintWriter pw = new PrintWriter(
+                        new FileWriter(Configuration.DIRECTORY_OF_LOG_FILE + Configuration.LOG_FILE_NAME));
                 pw.println(content);
                 pw.close();
             }
